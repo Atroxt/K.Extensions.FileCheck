@@ -93,7 +93,7 @@ jobs:
 
      
       - name: Create the package
-        run: dotnet pack .\src\K.Extensions.Similarity\K.Extensions.FileCheck.csproj -v normal --configuration Release -o:nupkg 
+        run: dotnet pack .\src\K.Extensions.FileCheck\K.Extensions.FileCheck.csproj -v normal --configuration Release -o:nupkg 
 
       - name: Push generated package to GitHub registry
         run: dotnet nuget push **/K.Extensions*.nupkg --source "https://nuget.pkg.github.com/Atroxt/index.json" --api-key ${{ secrets.GIT_TOKEN }} --skip-duplicate 
