@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+  pull_request:
+    branches: [ main ]
+    paths:
+    - './src/**/'
+
+env:
+  DOTNET_VERSION: '8.0.x' # The .NET SDK version to use
+ 
+jobs:
+  build:
+  
+    name: Build Test and Publish Artifacts
+    runs-on: windows-latest
+    # strategy:
+    #   matrix:
+    #     dotnet-version: '6.0.x'
+    #     #os: [windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+              
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore 
+
+      - name: CoberturaTets
+        run: dotnet test --no-restore --verbosity normal --configuration Release --collect "XPlat Code Coverage" /p:CollectCodeCoverage=true --settings CodeCoverage.runsettings --results-directory "CoberturaTestResults-${{ env.DOTNET_VERSION }}"
+      - name: Upload coverage report artifact
+        uses: codecov/codecov-action@v2
+        with:
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: CoberturaTestResults-${{ env.DOTNET_VERSION }}/
+      
+      - name: TrxTets
+        run: dotnet test --no-restore --verbosity normal --configuration Release --logger trx /p:CollectCodeCoverage=true --settings VSCodeCoverage.runsettings --results-directory "TrxTestResults-${{ env.DOTNET_VERSION }}"
+
+      - name: ReportGenerator
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.1.9
+        with:
+          reports: './**/*cobertura.xml' # REQUIRED # The coverage reports that should be parsed (separated by semicolon). Globbing is supported.
+          targetdir: 'coveragereport' # REQUIRED # The directory where the generated report should be saved.
+          reporttypes: 'HtmlInline;Cobertura' # The output formats and scope (separated by semicolon) Values: Badges, Clover, Cobertura, CsvSummary, Html, Html_Dark, Html_Light, HtmlChart, HtmlInline, HtmlInline_AzurePipelines, HtmlInline_AzurePipelines_Dark, HtmlInline_AzurePipelines_Light, HtmlSummary, JsonSummary, Latex, LatexSummary, lcov, MarkdownSummary, MHtml, PngChart, SonarQube, TeamCitySummary, TextSummary, Xml, XmlSummary
+          sourcedirs: '' # Optional directories which contain the corresponding source code (separated by semicolon). The source directories are used if coverage report contains classes without path information.
+          historydir: '' # Optional directory for storing persistent coverage information. Can be used in future reports to show coverage evolution.
+          plugins: '' # Optional plugin files for custom reports or custom history storage (separated by semicolon).
+          assemblyfilters: '+*' # Optional list of assemblies that should be included or excluded in the report. Exclusion filters take precedence over inclusion filters. Wildcards are allowed.
+          classfilters: '+*' # Optional list of classes that should be included or excluded in the report. Exclusion filters take precedence over inclusion filters. Wildcards are allowed.
+          filefilters: '+*;-*Migrations*' # Optional list of files that should be included or excluded in the report. Exclusion filters take precedence over inclusion filters. Wildcards are allowed.
+          verbosity: 'Info' # The verbosity level of the log messages. Values: Verbose, Info, Warning, Error, Off
+          title: '' # Optional title.
+          tag: '${{ github.run_number }}_${{ github.run_id }}' # Optional tag or build version.
+          license: '' # Optional license for PRO version. Get your license here: https://reportgenerator.io/pro
+          customSettings: '' # Optional custom settings (separated by semicolon). See: https://github.com/danielpalme/ReportGenerator/wiki/Settings.
+          toolpath: 'reportgeneratortool' # Default directory for installing the dotnet tool.
+
+      - name: Upload coverage report artifact
+        uses: actions/upload-artifact@v2.2.3
+        with:
+          name: CoverageReport # Artifact name        
+          path: coveragereport # Directory containing files to upload
+
+
+      - name: Upload CoberturaTets results
+        uses: actions/upload-artifact@v3
+        with:
+          name: dotnet-test-results-${{ env.DOTNET_VERSION }}
+          path: TrxTestResults-${{ env.DOTNET_VERSION }}
+        # Use always() to always run this step to publish test results when there are test failures
+        if: ${{ always() }}
+
+      - name: Upload TrxTets results
+        uses: actions/upload-artifact@v3
+        with:
+          name: dotnet-test-results-${{ env.DOTNET_VERSION }}
+          path: CoberturaTestResults-${{ env.DOTNET_VERSION }}
+        # Use always() to always run this step to publish test results when there are test failures
+        if: ${{ always() }}
+
+     
+      - name: Create the package
+        run: dotnet pack .\src\K.Extensions.Similarity\K.Extensions.FileCheck.csproj -v normal --configuration Release -o:nupkg 
+
+      - name: Push generated package to GitHub registry
+        run: dotnet nuget push **/K.Extensions*.nupkg --source "https://nuget.pkg.github.com/Atroxt/index.json" --api-key ${{ secrets.GIT_TOKEN }} --skip-duplicate 
+      
+      - name: Push generated package to Nuget registry
+        run: dotnet nuget push **/K.Extensions*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_TOKEN }} --skip-duplicate 
+            
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v3
+        with:
+          name: NugetPackage-Artifacts
+          path: ./nupkg/*.nupkg
+        # Use always() to always run this step to publish test results when there are test failures
+        if: ${{ always() }}
+

@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;net6.0;net7.0;net8.0</TargetFrameworks>
+   
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+   <ItemGroup>
+    <None Include="docs\Icon.png" Pack="true" PackagePath="./images" />
+    <None Include="docs\LICENSE.txt" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <Version>0.0.1</Version>
+    <Authors>Tino Kuehnel</Authors>
+    <PackageIcon>images/Icon.png</PackageIcon>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageTags>FileCheck Extensions</PackageTags>
+    <Description>Extensions to check Streams or byte array</Description>
+    <PackageProjectUrl>https://github.com/Atroxt/K.Extensions.FileCheck</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Atroxt/K.Extensions.FileCheck.git</RepositoryUrl>
+  </PropertyGroup>
+
+  <Target Name="PreparePackageReleaseNotesFromFile" BeforeTargets="GenerateNuspec">
+    <ReadLinesFromFile File="docs/Release-Notes.txt">
+      <Output TaskParameter="Lines" ItemName="ReleaseNoteLines" />
+    </ReadLinesFromFile>
+    <PropertyGroup>
+      <PackageReleaseNotes>@(ReleaseNoteLines, '%0a')</PackageReleaseNotes>
+    </PropertyGroup>
+  </Target>
+</Project>
