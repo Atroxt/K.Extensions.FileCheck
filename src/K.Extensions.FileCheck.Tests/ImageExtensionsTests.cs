@@ -11,9 +11,10 @@ namespace K.Extensions.FileCheck.Tests
         [DataRow("Image.png", true)]
         [DataRow("Image.bmp", true)]
         [DataRow("Document.docx", false)]
+        [DataRow("", false)]
         public void IsImage_WithByteArray(string document, bool expected)
         {
-            byte[] imageBytes = File.ReadAllBytes($"{_testDataPath}{document}");
+            byte[] imageBytes = string.IsNullOrEmpty(document) ? Array.Empty<byte>() : File.ReadAllBytes($"{_testDataPath}{document}");
             bool result = imageBytes.IsImage();
             Assert.AreEqual(expected, result);
         }
@@ -30,6 +31,17 @@ namespace K.Extensions.FileCheck.Tests
             {
                 bool result = stream.IsImage();
                 Assert.AreEqual(expected, result);
+            }
+        }
+        [TestMethod]
+        public void IsImage_WithEmptyStream()
+        {
+            using (var stream = new MemoryStream(new byte[1], true))
+            {
+                // close stream then u can't read the Stream
+                stream.Close();
+                bool result = stream.IsImage();
+                Assert.AreEqual(false, result);
             }
         }
     }

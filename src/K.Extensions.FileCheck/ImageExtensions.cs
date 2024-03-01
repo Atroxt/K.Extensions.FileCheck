@@ -10,7 +10,7 @@ namespace K.Extensions.FileCheck
         public static bool IsImage(this byte[] bytes)
         {
             if (bytes == null || bytes.Length < 8)
-                throw new ArgumentException("Byte array is null or too short to determine image type");
+                return false;
 
             List<byte> bytesIterated = bytes.Take(8).ToList();
 
@@ -19,7 +19,7 @@ namespace K.Extensions.FileCheck
         public static bool IsImage(this Stream stream)
         {
             if (stream == null || !stream.CanRead)
-                throw new ArgumentException("Stream is null or not readable");
+                return false;
 
             List<byte> bytesIterated = new List<byte>();
 

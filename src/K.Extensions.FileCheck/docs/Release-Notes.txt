@@ -1,2 +1,4 @@
 ﻿v0.0.1
+	IsImage retrun false instead of throwing Exception if stream/byte[] is empty
+v0.0.1
 	starts with Image and PDF support
