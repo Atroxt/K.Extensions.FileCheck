@@ -1,4 +1,6 @@
-﻿v0.0.1
+﻿v0.0.3
+	add IsWordDocument, IsExcelDocument, IsArchive method
+v0.0.2
 	IsImage retrun false instead of throwing Exception if stream/byte[] is empty
 v0.0.1
 	starts with Image and PDF support

@@ -7,7 +7,7 @@ FileChecker is a utility extension for identifying file types. Detects images (J
 
 ## Features
 
-- Supports image and PDF file type detection.
+- Supports image, Word-Documents, Excel-Sheets, and PDF file type detection.
 - Works with byte arrays and streams.
 - Fast and efficient file type identification.
 

@@ -5,8 +5,16 @@ using System.Linq;
 
 namespace K.Extensions.FileCheck
 {
+    /// <summary>
+    /// Provides extension methods for image file checks.
+    /// </summary>
     public static class ImageExtensions
     {
+        /// <summary>
+        /// Checks if the given byte array represents an image file.
+        /// </summary>
+        /// <param name="bytes">The byte array to check.</param>
+        /// <returns>True if the byte array represents an image file, false otherwise.</returns>
         public static bool IsImage(this byte[] bytes)
         {
             if (bytes == null || bytes.Length < 8)
@@ -16,6 +24,12 @@ namespace K.Extensions.FileCheck
 
             return CheckImageType(bytesIterated);
         }
+
+        /// <summary>
+        /// Checks if the given stream represents an image file.
+        /// </summary>
+        /// <param name="stream">The stream to check.</param>
+        /// <returns>True if the stream represents an image file, false otherwise.</returns>
         public static bool IsImage(this Stream stream)
         {
             if (stream == null || !stream.CanRead)
@@ -32,6 +46,12 @@ namespace K.Extensions.FileCheck
 
             return CheckImageType(bytesIterated);
         }
+
+        /// <summary>
+        /// Checks if the given byte list matches the byte pattern of an image file.
+        /// </summary>
+        /// <param name="bytesIterated">The byte list to check.</param>
+        /// <returns>True if the byte list matches the byte pattern of an image file, false otherwise.</returns>
         private static bool CheckImageType(List<byte> bytesIterated)
         {
             // Define byte patterns for different image file types
@@ -51,6 +71,13 @@ namespace K.Extensions.FileCheck
 
             return false;
         }
+
+        /// <summary>
+        /// Checks if the given byte array matches the given byte pattern.
+        /// </summary>
+        /// <param name="bytes">The byte array to check.</param>
+        /// <param name="pattern">The byte pattern to match.</param>
+        /// <returns>True if the byte array matches the byte pattern, false otherwise.</returns>
         private static bool IsImageType(byte[] bytes, string[] pattern)
         {
             if (bytes.Length < pattern.Length) return false;
