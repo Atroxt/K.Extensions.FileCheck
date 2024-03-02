@@ -29,13 +29,13 @@ namespace K.Extensions.FileCheck.Tests
             }
         }
         [TestMethod]
-        public void IsWordDocument_WithEmptyStream()
+        public void IsExcelDocument_WithEmptyStream()
         {
             using (var stream = new MemoryStream(new byte[1], true))
             {
                 // close stream then u can't read the Stream
                 stream.Close();
-                bool result = stream.IsWordDocument();
+                bool result = stream.IsExcelDocument();
                 Assert.AreEqual(false, result);
             }
         }
