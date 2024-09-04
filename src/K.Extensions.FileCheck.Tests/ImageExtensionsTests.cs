@@ -7,6 +7,7 @@ namespace K.Extensions.FileCheck.Tests
 
         [TestMethod]
         [DataRow("Image.jpg", true)]
+        [DataRow("Image.jpeg", true)]
         [DataRow("Image.gif", true)]
         [DataRow("Image.png", true)]
         [DataRow("Image.bmp", true)]
@@ -21,6 +22,7 @@ namespace K.Extensions.FileCheck.Tests
 
         [TestMethod]
         [DataRow("Image.jpg", true)]
+        [DataRow("Image.jpeg", true)]
         [DataRow("Image.gif", true)]
         [DataRow("Image.png", true)]
         [DataRow("Image.bmp", true)]

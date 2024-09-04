@@ -1,4 +1,6 @@
-﻿v0.0.3
+﻿v0.0.4
+	add jpeg to ImageExtension Type
+v0.0.3
 	add IsWordDocument, IsExcelDocument, IsArchive method
 v0.0.2
 	IsImage retrun false instead of throwing Exception if stream/byte[] is empty

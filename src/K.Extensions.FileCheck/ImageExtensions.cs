@@ -58,6 +58,7 @@ namespace K.Extensions.FileCheck
             Dictionary<string, string[]> imageTypes = new Dictionary<string, string[]>
             {
                 { "jpg", new string[] { "FF", "D8" } },
+                { "jpeg", new string[] { "FF", "D8" } },
                 { "bmp", new string[] { "42", "4D" } },
                 { "gif", new string[] { "47", "49", "46" } },
                 { "png", new string[] { "89", "50", "4E", "47", "0D", "0A", "1A", "0A" } }

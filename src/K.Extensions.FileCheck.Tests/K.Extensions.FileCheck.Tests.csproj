@@ -49,6 +49,9 @@
     <None Update="Data\Image.gif">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Data\Image.jpeg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Data\Image.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
