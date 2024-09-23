@@ -75,19 +75,21 @@ jobs:
           path: coveragereport # Directory containing files to upload
 
 
-      - name: Upload CoberturaTets results
+      - name: Upload results
         uses: actions/upload-artifact@v4
         with:
           name: dotnet-test-results-${{ env.DOTNET_VERSION }}
           path: TrxTestResults-${{ env.DOTNET_VERSION }}
+          overwrite: true
         # Use always() to always run this step to publish test results when there are test failures
         if: ${{ always() }}
 
-      - name: Upload TrxTets results
+      - name: Upload results
         uses: actions/upload-artifact@v4
         with:
           name: dotnet-test-results-${{ env.DOTNET_VERSION }}
           path: CoberturaTestResults-${{ env.DOTNET_VERSION }}
+          overwrite: true
         # Use always() to always run this step to publish test results when there are test failures
         if: ${{ always() }}
 
