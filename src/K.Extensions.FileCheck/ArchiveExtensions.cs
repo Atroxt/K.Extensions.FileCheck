@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace K.Extensions.FileCheck
 {
@@ -26,12 +27,9 @@ namespace K.Extensions.FileCheck
         /// <returns>True if the byte array represents an archive file, false otherwise.</returns>
         public static bool IsArchive(this byte[] bytes)
         {
-            foreach (var signature in ArchiveSignatures.Values)
-            {
-                if (CheckSignature(bytes, signature))
-                    return true;
-            }
-            return false;
+            if (bytes == null || bytes.Length == 0) return false;
+
+            return ArchiveSignatures.Values.Any(signature => CheckSignature(bytes, signature));
         }
 
         /// <summary>
@@ -44,34 +42,23 @@ namespace K.Extensions.FileCheck
             if (stream == null || !stream.CanRead)
                 return false;
 
-            foreach (var signature in ArchiveSignatures.Values)
+            long originalPosition = stream.CanSeek ? stream.Position : 0;
+
+            try
             {
-                if (IsArchive(stream, signature))
-                    return true;
+                foreach (var signature in ArchiveSignatures.Values)
+                {
+                    if (CheckSignature(stream, signature))
+                        return true;
+                }
             }
+            finally
+            {
+                if (stream.CanSeek)
+                    stream.Position = originalPosition;
+            }
+
             return false;
-        }
-
-        /// <summary>
-        /// Checks if the given stream matches the given archive file signature.
-        /// </summary>
-        /// <param name="stream">The stream to check.</param>
-        /// <param name="signature">The archive file signature to match.</param>
-        /// <returns>True if the stream matches the archive file signature, false otherwise.</returns>
-        private static bool IsArchive(Stream stream, string[] signature)
-        {
-            if (stream == null || !stream.CanRead || signature.Length == 0)
-                return false;
-
-            List<byte> bytesIterated = new List<byte>();
-
-            for (int i = 0; i < signature.Length; i++)
-            {
-                int bit = stream.ReadByte();
-                if (bit == -1) return false; // End of stream reached
-                bytesIterated.Add((byte)bit);
-            }
-            return CheckSignature(bytesIterated.ToArray(), signature);
         }
 
         /// <summary>
@@ -82,7 +69,7 @@ namespace K.Extensions.FileCheck
         /// <returns>True if the byte array matches the archive file signature, false otherwise.</returns>
         private static bool CheckSignature(byte[] bytes, string[] signature)
         {
-            if (bytes == null || signature.Length == 0 || bytes.Length < signature.Length)
+            if (bytes.Length < signature.Length)
                 return false;
 
             for (int i = 0; i < signature.Length; i++)
@@ -92,6 +79,23 @@ namespace K.Extensions.FileCheck
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Checks if the given stream matches the given archive file signature.
+        /// </summary>
+        /// <param name="stream">The stream to check.</param>
+        /// <param name="signature">The archive file signature to match.</param>
+        /// <returns>True if the stream matches the archive file signature, false otherwise.</returns>
+        private static bool CheckSignature(Stream stream, string[] signature)
+        {
+            byte[] buffer = new byte[signature.Length];
+            int bytesRead = stream.Read(buffer, 0, buffer.Length);
+
+            if (bytesRead < signature.Length)
+                return false;
+
+            return CheckSignature(buffer, signature);
         }
     }
 }

@@ -30,13 +30,23 @@ namespace K.Extensions.FileCheck
             if (stream == null || !stream.CanRead)
                 return false;
 
-            byte[] header = new byte[5];
-            int bytesRead = stream.Read(header, 0, 5);
+            long originalPosition = stream.CanSeek ? stream.Position : 0;
 
-            if (bytesRead < 5)
-                return false;
+            try
+            {
+                byte[] header = new byte[5];
+                int bytesRead = stream.Read(header, 0, header.Length);
 
-            return CheckPdfPattern(header);
+                if (bytesRead < header.Length)
+                    return false;
+
+                return CheckPdfPattern(header);
+            }
+            finally
+            {
+                if (stream.CanSeek)
+                    stream.Position = originalPosition;
+            }
         }
 
         /// <summary>
@@ -46,7 +56,8 @@ namespace K.Extensions.FileCheck
         /// <returns>True if the byte array matches the byte pattern of a PDF file, false otherwise.</returns>
         private static bool CheckPdfPattern(byte[] bytes)
         {
-            return bytes[0] == 0x25 &&  // %
+            return bytes.Length >= 5 &&
+                   bytes[0] == 0x25 &&  // %
                    bytes[1] == 0x50 &&  // P
                    bytes[2] == 0x44 &&  // D
                    bytes[3] == 0x46 &&  // F

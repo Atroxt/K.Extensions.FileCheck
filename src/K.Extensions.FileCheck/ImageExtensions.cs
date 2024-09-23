@@ -20,7 +20,7 @@ namespace K.Extensions.FileCheck
             if (bytes == null || bytes.Length < 8)
                 return false;
 
-            List<byte> bytesIterated = bytes.Take(8).ToList();
+            var bytesIterated = bytes.Take(8).ToArray();
 
             return CheckImageType(bytesIterated);
         }
@@ -35,16 +35,22 @@ namespace K.Extensions.FileCheck
             if (stream == null || !stream.CanRead)
                 return false;
 
-            List<byte> bytesIterated = new List<byte>();
+            long originalPosition = stream.CanSeek ? stream.Position : 0;
 
-            for (int i = 0; i < 8; i++)
+            try
             {
-                int bit = stream.ReadByte();
-                if (bit == -1) break; // End of stream reached
-                bytesIterated.Add((byte)bit);
-            }
+                byte[] buffer = new byte[8];
+                int bytesRead = stream.Read(buffer, 0, buffer.Length);
+                if (bytesRead < 8)
+                    Array.Resize(ref buffer, bytesRead); // Resize if less than 8 bytes were read
 
-            return CheckImageType(bytesIterated);
+                return CheckImageType(buffer);
+            }
+            finally
+            {
+                if (stream.CanSeek)
+                    stream.Position = originalPosition;
+            }
         }
 
         /// <summary>
@@ -52,25 +58,18 @@ namespace K.Extensions.FileCheck
         /// </summary>
         /// <param name="bytesIterated">The byte list to check.</param>
         /// <returns>True if the byte list matches the byte pattern of an image file, false otherwise.</returns>
-        private static bool CheckImageType(List<byte> bytesIterated)
+        private static bool CheckImageType(byte[] bytesIterated)
         {
             // Define byte patterns for different image file types
             Dictionary<string, string[]> imageTypes = new Dictionary<string, string[]>
             {
-                { "jpg", new string[] { "FF", "D8" } },
-                { "jpeg", new string[] { "FF", "D8" } },
+                { "jpg|jpeg", new string[] { "FF", "D8" } },
                 { "bmp", new string[] { "42", "4D" } },
                 { "gif", new string[] { "47", "49", "46" } },
                 { "png", new string[] { "89", "50", "4E", "47", "0D", "0A", "1A", "0A" } }
             };
 
-            foreach (var imageType in imageTypes)
-            {
-                if (IsImageType(bytesIterated.ToArray(), imageType.Value))
-                    return true;
-            }
-
-            return false;
+            return imageTypes.Values.Any(pattern => IsImageType(bytesIterated, pattern));
         }
 
         /// <summary>

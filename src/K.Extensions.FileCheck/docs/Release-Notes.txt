@@ -1,4 +1,6 @@
-﻿v0.0.4
+﻿v0.0.5
+	check docx and xlsx for the content in the package
+v0.0.4
 	add jpeg to ImageExtension Type
 v0.0.3
 	add IsWordDocument, IsExcelDocument, IsArchive method
