@@ -69,14 +69,14 @@ jobs:
           toolpath: 'reportgeneratortool' # Default directory for installing the dotnet tool.
 
       - name: Upload coverage report artifact
-        uses: actions/upload-artifact@v2.2.3
+        uses: actions/upload-artifact@v4
         with:
           name: CoverageReport # Artifact name        
           path: coveragereport # Directory containing files to upload
 
 
       - name: Upload CoberturaTets results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dotnet-test-results-${{ env.DOTNET_VERSION }}
           path: TrxTestResults-${{ env.DOTNET_VERSION }}
@@ -84,7 +84,7 @@ jobs:
         if: ${{ always() }}
 
       - name: Upload TrxTets results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dotnet-test-results-${{ env.DOTNET_VERSION }}
           path: CoberturaTestResults-${{ env.DOTNET_VERSION }}
@@ -103,7 +103,7 @@ jobs:
             
 
       - name: Upload packages
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: NugetPackage-Artifacts
           path: ./nupkg/*.nupkg
