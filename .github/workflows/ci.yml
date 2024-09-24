@@ -16,10 +16,6 @@ jobs:
   
     name: Build Test and Publish Artifacts
     runs-on: windows-latest
-    # strategy:
-    #   matrix:
-    #     dotnet-version: '6.0.x'
-    #     #os: [windows-latest]
 
     steps:
       - name: Checkout
@@ -29,7 +25,6 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-              
 
       - name: Install dependencies
         run: dotnet restore
@@ -39,6 +34,7 @@ jobs:
 
       - name: CoberturaTets
         run: dotnet test --no-restore --verbosity normal --configuration Release --collect "XPlat Code Coverage" /p:CollectCodeCoverage=true --settings CodeCoverage.runsettings --results-directory "CoberturaTestResults-${{ env.DOTNET_VERSION }}"
+      
       - name: Upload coverage report artifact
         uses: codecov/codecov-action@v2
         with:
@@ -81,7 +77,6 @@ jobs:
           name: dotnet-test-results-${{ env.DOTNET_VERSION }}
           path: TrxTestResults-${{ env.DOTNET_VERSION }}
           overwrite: true
-        # Use always() to always run this step to publish test results when there are test failures
         if: ${{ always() }}
 
       - name: Upload results
@@ -90,9 +85,7 @@ jobs:
           name: dotnet-test-results-${{ env.DOTNET_VERSION }}
           path: CoberturaTestResults-${{ env.DOTNET_VERSION }}
           overwrite: true
-        # Use always() to always run this step to publish test results when there are test failures
         if: ${{ always() }}
-
      
       - name: Create the package
         run: dotnet pack .\src\K.Extensions.FileCheck\K.Extensions.FileCheck.csproj -v normal --configuration Release -o:nupkg 
@@ -103,12 +96,10 @@ jobs:
       - name: Push generated package to Nuget registry
         run: dotnet nuget push **/K.Extensions*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_TOKEN }} --skip-duplicate 
             
-
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
           name: NugetPackage-Artifacts
           path: ./nupkg/*.nupkg
-        # Use always() to always run this step to publish test results when there are test failures
         if: ${{ always() }}
 
