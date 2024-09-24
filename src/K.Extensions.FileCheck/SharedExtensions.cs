@@ -2,14 +2,14 @@
 
 namespace K.Extensions.FileCheck
 {
-    public static class SharedExtensions
+    internal static class SharedExtensions
     {
         /// <summary>
         /// Checks if the byte array matches the ZIP signature.
         /// </summary>
         /// <param name="bytesIterated">The byte array to check.</param>
         /// <returns>True if it is a ZIP file (possibly a DOCX file), false otherwise.</returns>
-        public static bool IsZipFile(byte[] bytesIterated)
+        internal static bool IsZipFile(byte[] bytesIterated)
         {
             string[] zipSignature = new string[] { "50", "4B", "03", "04" }; // ZIP file signature as well for docx and odt
             return CheckSignature(bytesIterated, zipSignature);
@@ -21,7 +21,7 @@ namespace K.Extensions.FileCheck
         /// <param name="bytes">The byte array to check.</param>
         /// <param name="signature">The archive file signature to match.</param>
         /// <returns>True if the byte array matches the archive file signature, false otherwise.</returns>
-        public static bool CheckSignature(byte[] bytes, string[] signature)
+        internal static bool CheckSignature(byte[] bytes, string[] signature)
         {
             if (bytes.Length < signature.Length)
                 return false;
