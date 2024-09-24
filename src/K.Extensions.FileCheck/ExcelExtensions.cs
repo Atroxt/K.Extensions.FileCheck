@@ -26,7 +26,7 @@ namespace K.Extensions.FileCheck
             Array.Copy(bytes, bytesIterated, 4);
 
             // Check if it's a ZIP file (possibly an XLSX)
-            if (IsZipFile(bytesIterated))
+            if (SharedExtensions.IsZipFile(bytesIterated))
             {
                 using var memoryStream = new MemoryStream(bytes);
                 return IsXlsxExcelDocument(memoryStream);
@@ -36,8 +36,8 @@ namespace K.Extensions.FileCheck
                 // Check for older XLS format
                 return CheckExcelDocumentType(bytesIterated);
             }
-
         }
+
         /// <summary>
         /// Checks if the given stream represents an Excel document.
         /// </summary>
@@ -58,7 +58,7 @@ namespace K.Extensions.FileCheck
                 if (bytesRead < 4)
                     return false;
 
-                return IsZipFile(buffer) ? IsXlsxExcelDocument(stream) : CheckExcelDocumentType(buffer);
+                return SharedExtensions.IsZipFile(buffer) ? IsXlsxExcelDocument(stream) : CheckExcelDocumentType(buffer);
             }
             finally
             {
@@ -79,38 +79,7 @@ namespace K.Extensions.FileCheck
                 { "xls", new string[] { "D0", "CF", "11", "E0" } } // XLS signature
             };
 
-            return documentTypes.Values.Any(pattern => IsDocumentType(bytesIterated, pattern));
-        }
-
-        /// <summary>
-        /// Checks if the given byte array matches the given byte pattern.
-        /// </summary>
-        /// <param name="bytes">The byte array to check.</param>
-        /// <param name="pattern">The byte pattern to match.</param>
-        /// <returns>True if the byte array matches the byte pattern, false otherwise.</returns>
-        private static bool IsDocumentType(byte[] bytes, string[] pattern)
-        {
-            if (bytes.Length < pattern.Length)
-                return false;
-
-            for (int i = 0; i < pattern.Length; i++)
-            {
-                if (bytes[i] != Convert.ToByte(pattern[i], 16))
-                    return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Checks if the byte array matches the ZIP signature.
-        /// </summary>
-        /// <param name="bytesIterated">The byte array to check.</param>
-        /// <returns>True if it is a ZIP file, false otherwise.</returns>
-        private static bool IsZipFile(byte[] bytesIterated)
-        {
-            string[] zipSignature = new string[] { "50", "4B", "03", "04" }; // ZIP file signature as well xlsx
-            return IsDocumentType(bytesIterated, zipSignature);
+            return documentTypes.Values.Any(pattern => SharedExtensions.CheckSignature(bytesIterated, pattern));
         }
 
         /// <summary>

@@ -23,7 +23,7 @@ namespace K.Extensions.FileCheck
 
             var bytesIterated = bytes.Take(4).ToArray();
 
-            if (IsZipFile(bytesIterated))
+            if (SharedExtensions.IsZipFile(bytesIterated))
             {
                 using var memoryStream = new MemoryStream(bytes);
                 return IsDocxWordDocument(memoryStream);
@@ -53,7 +53,7 @@ namespace K.Extensions.FileCheck
                 if (bytesRead < 4)
                     Array.Resize(ref buffer, bytesRead); // Resize if less than 8 bytes were read
 
-                return IsZipFile(buffer) ?
+                return SharedExtensions.IsZipFile(buffer) ?
                     IsDocxWordDocument(stream) : CheckWordDocumentType(buffer);
             }
             finally
@@ -78,38 +78,7 @@ namespace K.Extensions.FileCheck
                 { "odt", new string[] { "3C", "6F", "66", "66", "69", "63", "65", "3A", "64", "6F", "63", "75", "6D", "65", "6E", "74", "2D", "63", "6F", "6E", "74", "65", "6E", "74" } } // ODT signature
             };
 
-            return documentTypes.Values.Any(pattern => IsDocumentType(bytesIterated, pattern));
-        }
-
-        /// <summary>
-        /// Checks if the given byte array matches the given byte pattern.
-        /// </summary>
-        /// <param name="bytes">The byte array to check.</param>
-        /// <param name="pattern">The byte pattern to match.</param>
-        /// <returns>True if the byte array matches the byte pattern, false otherwise.</returns>
-        private static bool IsDocumentType(byte[] bytes, string[] pattern)
-        {
-            if (bytes.Length < pattern.Length)
-                return false;
-
-            for (int i = 0; i < pattern.Length; i++)
-            {
-                if (bytes[i] != Convert.ToByte(pattern[i], 16))
-                    return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Checks if the byte array matches the ZIP signature.
-        /// </summary>
-        /// <param name="bytesIterated">The byte array to check.</param>
-        /// <returns>True if it is a ZIP file (possibly a DOCX file), false otherwise.</returns>
-        private static bool IsZipFile(byte[] bytesIterated)
-        {
-            string[] zipSignature = new string[] { "50", "4B", "03", "04" }; // ZIP file signature as well for docx and odt
-            return IsDocumentType(bytesIterated, zipSignature);
+            return documentTypes.Values.Any(pattern => SharedExtensions.CheckSignature(bytesIterated, pattern));
         }
 
         /// <summary>

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -29,7 +28,7 @@ namespace K.Extensions.FileCheck
         {
             if (bytes == null || bytes.Length == 0) return false;
 
-            return ArchiveSignatures.Values.Any(signature => CheckSignature(bytes, signature));
+            return ArchiveSignatures.Values.Any(signature => SharedExtensions.CheckSignature(bytes, signature));
         }
 
         /// <summary>
@@ -46,10 +45,9 @@ namespace K.Extensions.FileCheck
 
             try
             {
-                foreach (var signature in ArchiveSignatures.Values)
+                if (ArchiveSignatures.Values.Any(signature => CheckSignature(stream, signature)))
                 {
-                    if (CheckSignature(stream, signature))
-                        return true;
+                    return true;
                 }
             }
             finally
@@ -59,26 +57,6 @@ namespace K.Extensions.FileCheck
             }
 
             return false;
-        }
-
-        /// <summary>
-        /// Checks if the given byte array matches the given archive file signature.
-        /// </summary>
-        /// <param name="bytes">The byte array to check.</param>
-        /// <param name="signature">The archive file signature to match.</param>
-        /// <returns>True if the byte array matches the archive file signature, false otherwise.</returns>
-        private static bool CheckSignature(byte[] bytes, string[] signature)
-        {
-            if (bytes.Length < signature.Length)
-                return false;
-
-            for (int i = 0; i < signature.Length; i++)
-            {
-                if (bytes[i] != Convert.ToByte(signature[i], 16))
-                    return false;
-            }
-
-            return true;
         }
 
         /// <summary>
@@ -95,7 +73,7 @@ namespace K.Extensions.FileCheck
             if (bytesRead < signature.Length)
                 return false;
 
-            return CheckSignature(buffer, signature);
+            return SharedExtensions.CheckSignature(buffer, signature);
         }
     }
 }

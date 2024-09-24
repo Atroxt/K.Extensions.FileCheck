@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "K.Extensions.FileCheck", "src\K.Extensions.FileCheck\K.Extensions.FileCheck.csproj", "{E89B903D-1C97-411D-B836-B6C9A3771288}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "K.Extensions.FileCheck.Tests", "src\K.Extensions.FileCheck.Tests\K.Extensions.FileCheck.Tests.csproj", "{2BDDCD4A-68E0-480C-9C24-72CC1F162F98}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "K.Extensions.FileCheck.Tests", "src\K.Extensions.FileCheck.Tests\K.Extensions.FileCheck.Tests.csproj", "{2BDDCD4A-68E0-480C-9C24-72CC1F162F98}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Projektmappenelemente", "Projektmappenelemente", "{8BF63ED6-FF3E-4264-9E41-2A55790D2134}"
 	ProjectSection(SolutionItems) = preProject

@@ -69,26 +69,7 @@ namespace K.Extensions.FileCheck
                 { "png", new string[] { "89", "50", "4E", "47", "0D", "0A", "1A", "0A" } }
             };
 
-            return imageTypes.Values.Any(pattern => IsImageType(bytesIterated, pattern));
-        }
-
-        /// <summary>
-        /// Checks if the given byte array matches the given byte pattern.
-        /// </summary>
-        /// <param name="bytes">The byte array to check.</param>
-        /// <param name="pattern">The byte pattern to match.</param>
-        /// <returns>True if the byte array matches the byte pattern, false otherwise.</returns>
-        private static bool IsImageType(byte[] bytes, string[] pattern)
-        {
-            if (bytes.Length < pattern.Length) return false;
-
-            for (int i = 0; i < pattern.Length; i++)
-            {
-                if (bytes[i] != Convert.ToByte(pattern[i], 16))
-                    return false;
-            }
-
-            return true;
+            return imageTypes.Values.Any(pattern => SharedExtensions.CheckSignature(bytesIterated, pattern));
         }
     }
 }
