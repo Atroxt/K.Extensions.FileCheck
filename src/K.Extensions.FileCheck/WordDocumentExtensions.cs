@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 
 namespace K.Extensions.FileCheck
 {
@@ -11,6 +10,13 @@ namespace K.Extensions.FileCheck
     /// </summary>
     public static class WordDocumentExtensions
     {
+        private const int MinimumByteArrayLength = 4;
+        private static readonly Dictionary<string, ReadOnlyMemory<byte>> DocumentTypes = new Dictionary<string, ReadOnlyMemory<byte>>
+            {
+                { "doc", new byte[] { 0xD0, 0xCF, 0x11, 0xE0 } }, // DOC signature
+                { "odt", new byte[] { 0x3C, 0x6F, 0x66, 0x66, 0x69, 0x63, 0x65, 0x3A, 0x64, 0x6F, 0x63, 0x75, 0x6D, 0x65, 0x6E, 0x74, 0x2D, 0x63, 0x6F, 0x6E, 0x74, 0x65, 0x6E, 0x74 } } // ODT signature
+            };
+
         /// <summary>
         /// Checks if the given byte array represents a Word document.
         /// </summary>
@@ -18,19 +24,19 @@ namespace K.Extensions.FileCheck
         /// <returns>True if the byte array represents a Word document, false otherwise.</returns>
         public static bool IsWordDocument(this byte[] bytes)
         {
-            if (bytes == null || bytes.Length < 4)
+            if (bytes == null || bytes.Length < MinimumByteArrayLength)
                 return false;
 
-            var bytesIterated = bytes.Take(4).ToArray();
+            ReadOnlySpan<byte> bytesSpan = bytes.AsSpan(0, Math.Min(MinimumByteArrayLength, bytes.Length));
 
-            if (SharedExtensions.IsZipFile(bytesIterated))
+            if (SharedExtensions.IsZipFile(bytesSpan))
             {
                 using var memoryStream = new MemoryStream(bytes);
                 return IsDocxWordDocument(memoryStream);
             }
             else
             {
-                return CheckWordDocumentType(bytesIterated);
+                return CheckWordDocumentType(bytesSpan);
             }
         }
 
@@ -48,10 +54,11 @@ namespace K.Extensions.FileCheck
 
             try
             {
-                byte[] buffer = new byte[4];
-                int bytesRead = stream.Read(buffer, 0, buffer.Length);
-                if (bytesRead < 4)
-                    Array.Resize(ref buffer, bytesRead); // Resize if less than 8 bytes were read
+                Span<byte> buffer = stackalloc byte[MinimumByteArrayLength];
+                int bytesRead = stream.Read(buffer);
+
+                if (bytesRead < MinimumByteArrayLength)
+                    buffer = buffer.Slice(0, bytesRead); // Resize if less than 4 bytes were read
 
                 return SharedExtensions.IsZipFile(buffer) ?
                     IsDocxWordDocument(stream) : CheckWordDocumentType(buffer);
@@ -61,24 +68,24 @@ namespace K.Extensions.FileCheck
                 if (stream.CanSeek)
                     stream.Position = originalPosition;
             }
-            return false;
         }
 
         /// <summary>
         /// Checks if the given byte list matches the byte pattern of a Word document.
         /// </summary>
-        /// <param name="bytesIterated">The byte list to check.</param>
+        /// <param name="bytes">The byte list to check.</param>
         /// <returns>True if the byte list matches the byte pattern of a Word document, false otherwise.</returns>
-        private static bool CheckWordDocumentType(byte[] bytesIterated)
+        private static bool CheckWordDocumentType(ReadOnlySpan<byte> bytes)
         {
-            // Define byte patterns for different Word document file types
-            Dictionary<string, string[]> documentTypes = new Dictionary<string, string[]>
+            foreach (var pattern in DocumentTypes.Values)
             {
-                { "doc", new string[] { "D0", "CF", "11", "E0" } }, // DOC signature
-                { "odt", new string[] { "3C", "6F", "66", "66", "69", "63", "65", "3A", "64", "6F", "63", "75", "6D", "65", "6E", "74", "2D", "63", "6F", "6E", "74", "65", "6E", "74" } } // ODT signature
-            };
+                if (SharedExtensions.CheckSignature(bytes, pattern.Span))
+                {
+                    return true;
+                }
+            }
 
-            return documentTypes.Values.Any(pattern => SharedExtensions.CheckSignature(bytesIterated, pattern));
+            return false;
         }
 
         /// <summary>

@@ -28,6 +28,20 @@ namespace K.Extensions.FileCheck.Tests
                 Assert.AreEqual(expected, result);
             }
         }
+
+        [TestMethod]
+        [DataRow("Image.jpg", false)]
+        [DataRow("Zip.zip", true)]
+        [DataRow("Document.docx", true)]
+        public async Task IsArchive_WithImageFileStreamAsync(string document, bool expected)
+        {
+            using (var stream = File.OpenRead($"{_testDataPath}{document}"))
+            {
+                bool result = await stream.IsArchiveAsync();
+                Assert.AreEqual(expected, result);
+            }
+        }
+
         [TestMethod]
         public void IsArchive_WithEmptyStream()
         {

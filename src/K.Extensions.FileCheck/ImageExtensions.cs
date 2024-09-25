@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace K.Extensions.FileCheck
 {
@@ -10,6 +9,15 @@ namespace K.Extensions.FileCheck
     /// </summary>
     public static class ImageExtensions
     {
+        private const int MinimumByteArrayLength = 8;
+        private static readonly Dictionary<string, ReadOnlyMemory<byte>> ImageTypes = new Dictionary<string, ReadOnlyMemory<byte>>
+            {
+                { "jpg|jpeg", new byte[] { 0xFF, 0xD8 } }, // JPEG signature
+                { "bmp", new byte[] { 0x42, 0x4D } },     // BMP signature
+                { "gif", new byte[] { 0x47, 0x49, 0x46 } }, // GIF signature
+                { "png", new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A } } // PNG signature
+            };
+
         /// <summary>
         /// Checks if the given byte array represents an image file.
         /// </summary>
@@ -17,12 +25,11 @@ namespace K.Extensions.FileCheck
         /// <returns>True if the byte array represents an image file, false otherwise.</returns>
         public static bool IsImage(this byte[] bytes)
         {
-            if (bytes == null || bytes.Length < 8)
+            if (bytes == null || bytes.Length < MinimumByteArrayLength)
                 return false;
 
-            var bytesIterated = bytes.Take(8).ToArray();
-
-            return CheckImageType(bytesIterated);
+            ReadOnlySpan<byte> bytesSpan = bytes.AsSpan(0, Math.Min(MinimumByteArrayLength, bytes.Length));
+            return CheckImageType(bytesSpan);
         }
 
         /// <summary>
@@ -39,10 +46,11 @@ namespace K.Extensions.FileCheck
 
             try
             {
-                byte[] buffer = new byte[8];
-                int bytesRead = stream.Read(buffer, 0, buffer.Length);
-                if (bytesRead < 8)
-                    Array.Resize(ref buffer, bytesRead); // Resize if less than 8 bytes were read
+                Span<byte> buffer = stackalloc byte[MinimumByteArrayLength];
+                int bytesRead = stream.Read(buffer);
+
+                if (bytesRead < MinimumByteArrayLength)
+                    buffer = buffer.Slice(0, bytesRead); // Resize if less than 8 bytes were read
 
                 return CheckImageType(buffer);
             }
@@ -56,20 +64,19 @@ namespace K.Extensions.FileCheck
         /// <summary>
         /// Checks if the given byte list matches the byte pattern of an image file.
         /// </summary>
-        /// <param name="bytesIterated">The byte list to check.</param>
+        /// <param name="bytes">The byte list to check.</param>
         /// <returns>True if the byte list matches the byte pattern of an image file, false otherwise.</returns>
-        private static bool CheckImageType(byte[] bytesIterated)
+        private static bool CheckImageType(ReadOnlySpan<byte> bytes)
         {
-            // Define byte patterns for different image file types
-            Dictionary<string, string[]> imageTypes = new Dictionary<string, string[]>
+            foreach (var pattern in ImageTypes.Values)
             {
-                { "jpg|jpeg", new string[] { "FF", "D8" } },
-                { "bmp", new string[] { "42", "4D" } },
-                { "gif", new string[] { "47", "49", "46" } },
-                { "png", new string[] { "89", "50", "4E", "47", "0D", "0A", "1A", "0A" } }
-            };
+                if (SharedExtensions.CheckSignature(bytes, pattern.Span))
+                {
+                    return true;
+                }
+            }
 
-            return imageTypes.Values.Any(pattern => SharedExtensions.CheckSignature(bytesIterated, pattern));
+            return false;
         }
     }
 }

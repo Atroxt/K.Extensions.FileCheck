@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace K.Extensions.FileCheck
 {
@@ -7,6 +8,8 @@ namespace K.Extensions.FileCheck
     /// </summary>
     public static class PdfExtensions
     {
+        private const int MinimumByteArrayLength = 5;
+
         /// <summary>
         /// Checks if the given byte array represents a PDF file.
         /// </summary>
@@ -14,10 +17,10 @@ namespace K.Extensions.FileCheck
         /// <returns>True if the byte array represents a PDF file, false otherwise.</returns>
         public static bool IsPdf(this byte[] bytes)
         {
-            if (bytes == null || bytes.Length < 5)
+            if (bytes == null || bytes.Length < MinimumByteArrayLength)
                 return false;
 
-            return CheckPdfPattern(bytes);
+            return CheckPdfPattern(bytes.AsSpan());
         }
 
         /// <summary>
@@ -34,10 +37,10 @@ namespace K.Extensions.FileCheck
 
             try
             {
-                byte[] header = new byte[5];
-                int bytesRead = stream.Read(header, 0, header.Length);
+                Span<byte> header = stackalloc byte[MinimumByteArrayLength];
+                int bytesRead = stream.Read(header);
 
-                if (bytesRead < header.Length)
+                if (bytesRead < MinimumByteArrayLength)
                     return false;
 
                 return CheckPdfPattern(header);
@@ -54,9 +57,9 @@ namespace K.Extensions.FileCheck
         /// </summary>
         /// <param name="bytes">The byte array to check.</param>
         /// <returns>True if the byte array matches the byte pattern of a PDF file, false otherwise.</returns>
-        private static bool CheckPdfPattern(byte[] bytes)
+        private static bool CheckPdfPattern(ReadOnlySpan<byte> bytes)
         {
-            return bytes.Length >= 5 &&
+            return bytes.Length >= MinimumByteArrayLength &&
                    bytes[0] == 0x25 &&  // %
                    bytes[1] == 0x50 &&  // P
                    bytes[2] == 0x44 &&  // D

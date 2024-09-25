@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 
 namespace K.Extensions.FileCheck
 {
@@ -11,6 +10,11 @@ namespace K.Extensions.FileCheck
     /// </summary>
     public static class ExcelExtensions
     {
+        private const int MinimumByteArrayLength = 4;
+        private static readonly Dictionary<string, ReadOnlyMemory<byte>> DocumentTypes = new Dictionary<string, ReadOnlyMemory<byte>>
+        {
+            { "xls", new byte[] { 0xD0, 0xCF, 0x11, 0xE0 } }
+        };
         /// <summary>
         /// Checks if the given byte array represents an Excel document.
         /// </summary>
@@ -19,14 +23,13 @@ namespace K.Extensions.FileCheck
 
         public static bool IsExcelDocument(this byte[] bytes)
         {
-            if (bytes == null || bytes.Length < 4)
+            if (bytes == null || bytes.Length < MinimumByteArrayLength)
                 return false;
 
-            byte[] bytesIterated = new byte[4];
-            Array.Copy(bytes, bytesIterated, 4);
-
+            ReadOnlySpan<byte> bytesSpan = bytes.AsSpan(0, MinimumByteArrayLength);
+            
             // Check if it's a ZIP file (possibly an XLSX)
-            if (SharedExtensions.IsZipFile(bytesIterated))
+            if (SharedExtensions.IsZipFile(bytesSpan))
             {
                 using var memoryStream = new MemoryStream(bytes);
                 return IsXlsxExcelDocument(memoryStream);
@@ -34,7 +37,7 @@ namespace K.Extensions.FileCheck
             else
             {
                 // Check for older XLS format
-                return CheckExcelDocumentType(bytesIterated);
+                return CheckExcelDocumentType(bytesSpan);
             }
         }
 
@@ -52,13 +55,14 @@ namespace K.Extensions.FileCheck
 
             try
             {
-                byte[] buffer = new byte[4];
-                int bytesRead = stream.Read(buffer, 0, buffer.Length);
+                Span<byte> buffer = stackalloc byte[MinimumByteArrayLength];
+                int bytesRead = stream.Read(buffer);
 
-                if (bytesRead < 4)
+                if (bytesRead < MinimumByteArrayLength)
                     return false;
 
-                return SharedExtensions.IsZipFile(buffer) ? IsXlsxExcelDocument(stream) : CheckExcelDocumentType(buffer);
+                return SharedExtensions.IsZipFile(buffer) ? 
+                    IsXlsxExcelDocument(stream) : CheckExcelDocumentType(buffer);
             }
             finally
             {
@@ -69,17 +73,19 @@ namespace K.Extensions.FileCheck
         /// <summary>
         /// Checks if the given byte list matches the byte pattern of an Excel document.
         /// </summary>
-        /// <param name="bytesIterated">The byte list to check.</param>
+        /// <param name="bytes">The byte list to check.</param>
         /// <returns>True if the byte list matches the byte pattern of an Excel document, false otherwise.</returns>
-        private static bool CheckExcelDocumentType(byte[] bytesIterated)
+        private static bool CheckExcelDocumentType(ReadOnlySpan<byte> bytes)
         {
-            // Define byte patterns for different Excel document file types
-            Dictionary<string, string[]> documentTypes = new Dictionary<string, string[]>
+            foreach (var pattern in DocumentTypes.Values)
             {
-                { "xls", new string[] { "D0", "CF", "11", "E0" } } // XLS signature
-            };
+                if (SharedExtensions.CheckSignature(bytes, pattern.Span))
+                {
+                    return true;
+                }
+            }
 
-            return documentTypes.Values.Any(pattern => SharedExtensions.CheckSignature(bytesIterated, pattern));
+            return false;
         }
 
         /// <summary>
